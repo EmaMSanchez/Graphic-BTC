@@ -16,8 +16,10 @@ import { useRouter } from "next/navigation"
 const TradingBotsAnalysis = () => {
   const [selectedBot, setSelectedBot] = useState('all');
   const [leverage, setLeverage] = useState(1);
+  const [chartMode, setChartMode] = useState('comparative');
   
-  const botsData = {
+  // 🔹 Aquí vos cargás tu objeto botsData con tus datos
+   const botsData = {
     'Backtester1Y':[2.5184705337157345,-2.684938627938189,-2.6454507939110252,2.479494158257254,-2.6618565279403614,2.469643957606117,2.4637112810437594,-2.6505955801472427,2.470798614638466,2.5929207789336832],
     'Backtester2Y': [-2.6902760647464152,2.5030453065855887,-2.64429034665291,2.5679239675294143,2.6524491102754153,-2.7383518936981743,-2.7724309871723833,2.509502148670402,-2.7138424282878932,2.5169143310022717,2.463972120343796,2.4813764284320605,-2.7088042724082126,-2.9518586613190343,2.785133626998985,2.47971221889991,2.4688518728570448,2.4816722285051167],
     'Backtester3Y': [2.5639353712291086,-3.5109008471729433,3.0678262270647383,2.534090477864907,-2.8374381860428017,2.4885010078818475,-2.792963101504058,-3.0333620579257476,-2.6975932297963494,2.4668851080634973,2.4621456504947563,2.677564736665481],
@@ -105,24 +107,61 @@ const TradingBotsAnalysis = () => {
 
   // 🔹 dataset para gráfico comparativo
   const comparativeData = (() => {
-    const firstBot = Object.keys(botsData)[0];
-    if (!firstBot) return [];
-
-    const curves = {};
-    for (const botName in botsData) {
-      curves[botName] = getEquityCurve(botsData[botName], leverage);
+  const curves = {};
+  let maxLength = 0;
+  
+  // Generar curvas y encontrar la longitud máxima
+  for (const botName in botsData) {
+    curves[botName] = getEquityCurve(botsData[botName], leverage);
+    if (curves[botName].length > maxLength) {
+      maxLength = curves[botName].length;
     }
+  }
 
-    const length = curves[firstBot].length;
-    const combined = [];
-    for (let i = 0; i < length; i++) {
-      const row = { trade: i + 1 };
-      for (const botName in curves) {
-        row[botName] = curves[botName][i]?.capital ?? null;
-      }
-      combined.push(row);
+  // Crear array combinado hasta la longitud máxima
+  const combined = [];
+  for (let i = 0; i < maxLength; i++) {
+    const row = { trade: i + 1 };
+    for (const botName in curves) {
+      // Si este bot tiene datos para este trade, usarlos; si no, null
+      row[botName] = i < curves[botName].length ? curves[botName][i].capital : null;
     }
-    return combined;
+    combined.push(row);
+  }
+  return combined;
+})();
+
+// 🔹 NUEVO: Gráfico secuencial acumulado (todos los años conectados)
+  const sequentialData = (() => {
+    let capital = 100;
+    let tradeCounter = 0;
+    const sequential = [];
+    
+    // Ordenar los bots por año (1Y, 2Y, 3Y, 4Y, 5Y)
+    const sortedBots = Object.keys(botsData).sort((a, b) => {
+      const yearA = parseInt(a.match(/(\d+)Y/)?.[1] || '0');
+      const yearB = parseInt(b.match(/(\d+)Y/)?.[1] || '0');
+      return yearA - yearB;
+    });
+
+    sortedBots.forEach((botName, botIndex) => {
+      const trades = botsData[botName];
+      
+      trades.forEach((pct, tradeIndex) => {
+        tradeCounter++;
+        capital = capital * (1 + (pct * leverage) / 100);
+        
+        sequential.push({
+          trade: tradeCounter,
+          capital: capital,
+          bot: botName,
+          year: botIndex + 1,
+          tradeInYear: tradeIndex + 1
+        });
+      });
+    });
+
+    return sequential;
   })();
 
   const irAInit = () => {
@@ -270,39 +309,138 @@ const TradingBotsAnalysis = () => {
           ))}
         </div>
 
-        {/* 🔹 Gráfico comparativo */}
-        {comparativeData.length > 0 && (
+        {/* 🔹 Gráfico comparativo/secuencial unificado */}
+        {comparativeData.length > 0 && sequentialData.length > 0 && (
           <div className="mt-10 bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-800 mb-4">
-              📊 Comparativa Curvas de Capital (todos los bots) {leverage > 1 ? `(x${leverage})` : ''}
-            </h3>
-            <div className="w-full h-80">
-              <ResponsiveContainer>
-                <LineChart
-                  data={comparativeData}
-                  margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+            {/* Toggle entre modos */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-800">
+                📊 {chartMode === 'comparative' ? 'Comparativa Curvas de Capital' : 'Evolución Secuencial Acumulada'} {leverage > 1 ? `(x${leverage})` : ''}
+              </h3>
+              <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setChartMode('comparative')}
+                  className={`px-4 py-2 rounded-md font-medium transition-all ${
+                    chartMode === 'comparative'
+                      ? 'bg-white text-blue-600 shadow-md'
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
                 >
-                  <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                  <XAxis dataKey="trade" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {Object.keys(botsData).map((botName, idx) => {
-                    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
-                    return (
+                  Comparativa
+                </button>
+                <button
+                  onClick={() => setChartMode('sequential')}
+                  className={`px-4 py-2 rounded-md font-medium transition-all ${
+                    chartMode === 'sequential'
+                      ? 'bg-white text-purple-600 shadow-md'
+                      : 'text-slate-600 hover:text-slate-800'
+                  }`}
+                >
+                  Secuencial
+                </button>
+              </div>
+            </div>
+
+            {/* Descripción según el modo */}
+            <p className="text-sm text-slate-600 mb-4">
+              {chartMode === 'comparative' 
+                ? 'Todos los bots en paralelo desde el mismo punto de partida.'
+                : 'Cada año se conecta con el anterior. El capital final de un año es el inicial del siguiente (rendimiento compuesto total).'
+              }
+            </p>
+
+            {/* Gráfico Comparativo */}
+            {chartMode === 'comparative' && (
+              <div className="w-full h-80">
+                <ResponsiveContainer>
+                  <LineChart
+                    data={comparativeData}
+                    margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                  >
+                    <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                    <XAxis dataKey="trade" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    {Object.keys(botsData).map((botName, idx) => {
+                      const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+                      return (
+                        <Line
+                          key={botName}
+                          type="monotone"
+                          dataKey={botName}
+                          stroke={colors[idx % colors.length]}
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      );
+                    })}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Gráfico Secuencial */}
+            {chartMode === 'sequential' && (
+              <>
+                <div className="w-full h-96">
+                  <ResponsiveContainer>
+                    <LineChart
+                      data={sequentialData}
+                      margin={{ top: 5, right: 20, bottom: 13, left: 1 }}
+                    >
+                      <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                      <XAxis 
+                        dataKey="trade" 
+                        label={{ value: 'Operación Total', position: 'insideBottom', offset: -10 }}
+                      />
+                      <YAxis 
+                        label={{ value: 'Capital (%)', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-white p-3 border border-slate-300 rounded shadow-lg">
+                                <p className="font-bold text-slate-800">{data.bot}</p>
+                                <p className="text-sm text-slate-600">Operación #{data.trade}</p>
+                                <p className="text-sm text-slate-600">Trade {data.tradeInYear} del año {data.year}</p>
+                                <p className="text-lg font-bold text-blue-600">
+                                  {data.capital.toFixed(2)}%
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
                       <Line
-                        key={botName}
                         type="monotone"
-                        dataKey={botName}
-                        stroke={colors[idx % colors.length]}
-                        strokeWidth={2}
+                        dataKey="capital"
+                        stroke="#8b5cf6"
+                        strokeWidth={3}
                         dot={false}
                       />
-                    );
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
-            </div> 
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                {/* Resumen final */}
+                <div className="mt-6 bg-purple-50 border-l-4 border-purple-600 p-4 rounded">
+                  <p className="text-sm text-slate-700">
+                    <strong>Capital Final (5 años acumulados):</strong>{' '}
+                    <span className={`text-2xl font-bold ${getStatusColor(sequentialData[sequentialData.length - 1].capital - 100)}`}>
+                      {sequentialData[sequentialData.length - 1].capital.toFixed(2)}%
+                    </span>
+                    {' '}(Ganancia: {(sequentialData[sequentialData.length - 1].capital - 100).toFixed(2)}%)
+                  </p>
+                  <p className="text-xs text-slate-600 mt-2">
+                    Total de operaciones: {sequentialData.length}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         )}
           
@@ -315,6 +453,3 @@ const TradingBotsAnalysis = () => {
 };
 
 export default TradingBotsAnalysis;
-
-
-
