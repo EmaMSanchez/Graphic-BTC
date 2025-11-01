@@ -16,17 +16,14 @@ export default function Home() {
   };
 
 const calculateReturns = (trades, leverageMultiplier = 1, initialCapital = 100) => {
-  // Asumimos: `trades` ya son porcentajes netos (comisiones aplicadas)
+ 
   const leveragedTrades = trades.map(t => t * leverageMultiplier);
 
-  // Lineal (suma simple de % apalancados)
-  const linearReturn = leveragedTrades.reduce((sum, pct) => sum + pct, 0);
 
-  // Compuesto (factor acumulado)
+  const linearReturn = leveragedTrades.reduce((sum, pct) => sum + pct, 0);
   const compoundFactor = leveragedTrades.reduce((acc, pct) => acc * (1 + pct / 100), 1);
   const compoundReturnPct = (compoundFactor - 1) * 100;
 
-  // Separar wins/losses
   const winningTrades = leveragedTrades.filter(t => t > 0);
   const losingTrades = leveragedTrades.filter(t => t < 0);
 
@@ -47,13 +44,13 @@ const calculateReturns = (trades, leverageMultiplier = 1, initialCapital = 100) 
   const largestWin = winningTrades.length ? Math.max(...winningTrades) : 0;
   const largestLoss = losingTrades.length ? Math.min(...losingTrades) : 0;
 
-  // Simulación de capital y drawdown usando initialCapital consistente
+  // Simulación de capital y drawdown 
   let peak = initialCapital;
   let maxDrawdown = 0;
   let currentCapital = initialCapital;
 
   for (const pct of leveragedTrades) {
-    // Si pct <= -100, interpretamos liquidación/total loss (capital a 0)
+    // Si pct <= -100, liquidación/total loss (capital a 0)
     if (pct <= -100) {
       currentCapital = 0;
       maxDrawdown = 100;
