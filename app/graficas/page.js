@@ -311,33 +311,33 @@ const TradingBotsAnalysis = () => {
         {comparativeData.length > 0 && sequentialData.length > 0 && (
           <div className="mt-10 bg-white rounded-xl shadow-lg p-6">
             {/* Toggle entre modos */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">
-                📊 {chartMode === 'comparative' ? 'Comparativa Curvas de Capital' : 'Evolución Secuencial Acumulada'} {leverage > 1 ? `(x${leverage})` : ''}
-              </h3>
-              <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
-                <button
-                  onClick={() => setChartMode('comparative')}
-                  className={`px-4 py-2 rounded-md font-medium transition-all ${
-                    chartMode === 'comparative'
-                      ? 'bg-white text-blue-600 shadow-md'
-                      : 'text-slate-600 hover:text-slate-800'
-                  }`}
-                >
-                  Comparativa
-                </button>
-                <button
-                  onClick={() => setChartMode('sequential')}
-                  className={`px-4 py-2 rounded-md font-medium transition-all ${
-                    chartMode === 'sequential'
-                      ? 'bg-white text-purple-600 shadow-md'
-                      : 'text-slate-600 hover:text-slate-800'
-                  }`}
-                >
-                  Secuencial
-                </button>
-              </div>
-            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <h3 className="text-lg sm:text-xl font-bold text-slate-800">
+    📊 {chartMode === 'comparative' ? 'Comparativa Curvas de Capital' : 'Evolución Secuencial Acumulada'} {leverage > 1 ? `(x${leverage})` : ''}
+  </h3>
+  <div className="flex gap-2 bg-slate-100 p-1 rounded-lg w-full sm:w-auto">
+    <button
+      onClick={() => setChartMode('comparative')}
+      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm sm:text-base ${
+        chartMode === 'comparative'
+          ? 'bg-white text-blue-600 shadow-md'
+          : 'text-slate-600 hover:text-slate-800'
+      }`}
+    >
+      Comparativa
+    </button>
+    <button
+      onClick={() => setChartMode('sequential')}
+      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md font-medium transition-all text-sm sm:text-base ${
+        chartMode === 'sequential'
+          ? 'bg-white text-purple-600 shadow-md'
+          : 'text-slate-600 hover:text-slate-800'
+      }`}
+    >
+      Secuencial
+    </button>
+  </div>
+</div>
 
             {/* Descripción según el modo */}
             <p className="text-sm text-slate-600 mb-4">
@@ -454,4 +454,5 @@ const TradingBotsAnalysis = () => {
 };
 
 export default TradingBotsAnalysis;
+
 
