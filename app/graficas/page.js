@@ -10,7 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend
-} from 'recharts'; // 👈 librería de gráficos
+} from 'recharts'; 
 import { useRouter } from "next/navigation"
 
 const TradingBotsAnalysis = () => {
@@ -43,7 +43,7 @@ const TradingBotsAnalysis = () => {
 
     let peak = 100;
     let maxDrawdown = 0;
-    let currentCapital = 100000;
+    let currentCapital = 100;
 
     leveragedTrades.forEach(pct => {
       currentCapital = currentCapital * (1 + pct / 100);
@@ -203,11 +203,10 @@ const TradingBotsAnalysis = () => {
           )}
         </div>
 
-        {/* Botones para elegir bot */}
-        <div className="mb-6 flex gap-4">
+        <div className="mb-4 sm:mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
             onClick={() => setSelectedBot('all')}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
               selectedBot === 'all' 
                 ? 'bg-blue-600 text-white shadow-lg' 
                 : 'bg-white text-slate-700 hover:bg-blue-50'
@@ -219,7 +218,7 @@ const TradingBotsAnalysis = () => {
             <button
               key={bot}
               onClick={() => setSelectedBot(bot)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
                 selectedBot === bot 
                   ? 'bg-blue-600 text-white shadow-lg' 
                   : 'bg-white text-slate-700 hover:bg-blue-50'
@@ -230,20 +229,22 @@ const TradingBotsAnalysis = () => {
           ))}
         </div>
 
-        {/* Tarjetas por bot */}
-        <div className="grid gap-6">
+        <div className="grid gap-4 sm:gap-6">
           {getBotData().map(([botName, data]) => (
             <div key={botName} className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <BarChart3 className="w-6 h-6" />
-                  {botName}
+              {/* Card Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6" />
+                    {botName}
+                  </h2>
                   {leverage > 1 && (
-                    <span className="ml-auto bg-purple-500 px-3 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-purple-500 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold text-white self-start sm:ml-auto">
                       Apalancamiento x{leverage}
                     </span>
                   )}
-                </h2>
+                </div>
               </div>
 
               <div className="p-6">
@@ -428,17 +429,20 @@ const TradingBotsAnalysis = () => {
                 
                 {/* Resumen final */}
                 <div className="mt-6 bg-purple-50 border-l-4 border-purple-600 p-4 rounded">
-                  <p className="text-sm text-slate-700">
-                    <strong>Capital Final (5 años acumulados):</strong>{' '}
-                    <span className={`text-2xl font-bold ${getStatusColor(sequentialData[sequentialData.length - 1].capital - 100)}`}>
-                      {sequentialData[sequentialData.length - 1].capital.toFixed(2)}%
+                   <p className="text-sm text-slate-700">
+                   <strong>Capital Final (5 años acumulados):</strong>{' '}
+                   <span className={`text-xl font-bold ${getStatusColor(sequentialData[sequentialData.length - 1].capital - 100)}`}>
+                    {sequentialData[sequentialData.length - 1].capital.toFixed(2)}
                     </span>
-                    {' '}(Ganancia: {(sequentialData[sequentialData.length - 1].capital - 100).toFixed(2)}%)
-                  </p>
-                  <p className="text-xs text-slate-600 mt-2">
-                    Total de operaciones: {sequentialData.length}
-                  </p>
-                </div>
+                    {' '}
+                    <span className={`text-xl font-bold ${getStatusColor(sequentialData[sequentialData.length - 1].capital - 100)}`}>
+                    ({sequentialData[sequentialData.length - 1].capital >= 100 ? '+' : ''}{(sequentialData[sequentialData.length - 1].capital - 100).toFixed(2)}%)
+                    </span>
+                    </p>
+                    <p className="text-xs text-slate-600 mt-2">
+                    Capital inicial: 100 → Capital final: {sequentialData[sequentialData.length - 1].capital.toFixed(2)} | Total de operaciones: {sequentialData.length}
+                    </p>
+                  </div>
               </>
             )}
           </div>
