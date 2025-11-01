@@ -18,7 +18,6 @@ const TradingBotsAnalysis = () => {
   const [leverage, setLeverage] = useState(1);
   const [chartMode, setChartMode] = useState('comparative');
   
-  // 🔹 Aquí vos cargás tu objeto botsData con tus datos
    const botsData = {
     'Backtester1Y':[2.5184705337157345,-2.684938627938189,-2.6454507939110252,2.479494158257254,-2.6618565279403614,2.469643957606117,2.4637112810437594,-2.6505955801472427,2.470798614638466,2.5929207789336832],
     'Backtester2Y': [-2.6902760647464152,2.5030453065855887,-2.64429034665291,2.5679239675294143,2.6524491102754153,-2.7383518936981743,-2.7724309871723833,2.509502148670402,-2.7138424282878932,2.5169143310022717,2.463972120343796,2.4813764284320605,-2.7088042724082126,-2.9518586613190343,2.785133626998985,2.47971221889991,2.4688518728570448,2.4816722285051167],
@@ -27,7 +26,6 @@ const TradingBotsAnalysis = () => {
     'Backtester5Y': [2.4623568447325823,-2.65150685804107,2.492912576957373,-2.77062880034549,2.5560845418518423,2.7264683034356643,2.612191269259393,2.4863362621464873,-2.6718375798865046,2.4708453878406864,2.4796591412992166,2.4989048550293425,-2.75324792809923,2.8295116256561053]
   };
 
-  // 🔹 función existente para calcular métricas
   const calculateReturns = (trades, leverageMultiplier = 1) => {
     const leveragedTrades = trades.map(t => t * leverageMultiplier);
     const linearReturn = leveragedTrades.reduce((sum, pct) => sum + pct, 0);
@@ -77,7 +75,7 @@ const TradingBotsAnalysis = () => {
     return out;
   }, [leverage, botsData]);
 
-  // 🔹 función NUEVA para curva de capital
+  //  función para curva de capital
   const getEquityCurve = (trades, leverageMultiplier = 1) => {
     let capital = 100;
     return trades.map((pct, index) => {
@@ -105,12 +103,12 @@ const TradingBotsAnalysis = () => {
     return 'bg-gray-50';
   };
 
-  // 🔹 dataset para gráfico comparativo
+  // dataset gráfico comparativo
   const comparativeData = (() => {
   const curves = {};
   let maxLength = 0;
   
-  // Generar curvas y encontrar la longitud máxima
+  
   for (const botName in botsData) {
     curves[botName] = getEquityCurve(botsData[botName], leverage);
     if (curves[botName].length > maxLength) {
@@ -118,7 +116,6 @@ const TradingBotsAnalysis = () => {
     }
   }
 
-  // Crear array combinado hasta la longitud máxima
   const combined = [];
   for (let i = 0; i < maxLength; i++) {
     const row = { trade: i + 1 };
@@ -131,7 +128,7 @@ const TradingBotsAnalysis = () => {
   return combined;
 })();
 
-// 🔹 NUEVO: Gráfico secuencial acumulado (todos los años conectados)
+// Gráfico secuencial acumulado (todos los años conectados)
   const sequentialData = (() => {
     let capital = 100;
     let tradeCounter = 0;
@@ -273,7 +270,7 @@ const TradingBotsAnalysis = () => {
                   </div>
                 </div>
 
-                {/* 🔹 Gráfico curva de capital */}
+                {/* Gráfico curva de capital */}
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold text-slate-800 mb-4">📈 Curva de Capital</h3>
                   <div className="w-full h-64">
@@ -310,7 +307,7 @@ const TradingBotsAnalysis = () => {
           ))}
         </div>
 
-        {/* 🔹 Gráfico comparativo/secuencial unificado */}
+        {/* Gráfico comparativo/secuencial unificado */}
         {comparativeData.length > 0 && sequentialData.length > 0 && (
           <div className="mt-10 bg-white rounded-xl shadow-lg p-6">
             {/* Toggle entre modos */}
@@ -457,3 +454,4 @@ const TradingBotsAnalysis = () => {
 };
 
 export default TradingBotsAnalysis;
+
